@@ -1,17 +1,94 @@
 import sys
 import os
 
+import numpy as np
+import scipy as sp
+from scipy import stats
+
 BASE_COUNT = 50
+WINDOW_LEN = 50
+
+def get_confidence_interval(data, confidence=0.95):
+  a = np.array(data)
+  n = len(a)
+  m = np.mean(a)
+  # sigma = np.std(a, ddof=1)
+  # conf_int = stats.norm.interval(confidence, loc=m, scale=sigma)
+
+  sigma = sp.stats.sem(a)
+  h = sigma * sp.stats.t._ppf((1+confidence)/2, n-1)
+
+  return m-h, m+h
+
+def detect_change(base, target):
+  (left, right) = get_confidence_interval(base)
+  target_mean = sum(target)/len(target)
+
+  # print ("(" + str(left) + "," + str(right) + ")", str(target_mean))
+
+  return target_mean < left or target_mean > right
+
+def get_next_entry(f):
+  entry = f.readline().strip()
+  try:
+    number = float(entry)
+    return number
+  except ValueError:
+    return entry
+
+def slide_window(window, new_element):
+  window.pop(0)
+  window.append(new_element)
+
+def move_windows(base, target, starting, new_entry):
+  if starting >= BASE_COUNT:
+    slide_window(base, target[0])
+    # print (base)
+
+  slide_window(target, new_entry)
+  # print (target)
+
+  starting += 1
+
+  return starting
 
 def run(dirname, file):
-  f = open(dirname + '/' + file)
-  entries = []
+  assert BASE_COUNT >= WINDOW_LEN
 
-  for i in range(50):
-    entry = f.readline().strip()
-    entries.append(entry)
-    
-  print (file, entries)
+  print (file)
+
+  f = open(dirname + '/' + file)
+  tmp_entries = []
+
+  for i in range(BASE_COUNT):
+    entry = get_next_entry(f)
+    tmp_entries.append(entry)
+
+  base_window = tmp_entries[-WINDOW_LEN:]
+  target_window = tmp_entries[-WINDOW_LEN:]
+  starting_location = 0
+  start_change = -1
+
+  while True:
+    new_entry = get_next_entry(f)
+    if new_entry == "":
+      break;
+
+    starting_location = move_windows(base_window,
+                                     target_window,
+                                     starting_location,
+                                     new_entry)
+    if detect_change(base_window, target_window):
+      if start_change == -1:
+        start_change = starting_location + WINDOW_LEN - 1
+      if starting_location >= start_change:
+        print (start_change, starting_location)
+        break
+    else:
+      if start_change != -1:
+        start_change = -1
+  
+  # print (base_window, "\n", target_window)
 
 def main(argv):
   len_argv = len(argv)
