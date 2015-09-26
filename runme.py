@@ -64,31 +64,32 @@ def run(dirname, file):
     entry = get_next_entry(f)
     tmp_entries.append(entry)
 
-  base_window = tmp_entries[-WINDOW_LEN:]
-  target_window = tmp_entries[-WINDOW_LEN:]
-  starting_location = 0
-  start_change = -1
+  if isinstance(tmp_entries[0], float):
+    base_window = tmp_entries[-WINDOW_LEN:]
+    target_window = tmp_entries[-WINDOW_LEN:]
+    starting_location = 0
+    start_change = -1
 
-  while True:
-    new_entry = get_next_entry(f)
-    if new_entry == "":
-      break;
+    while True:
+      new_entry = get_next_entry(f)
+      if new_entry == "":
+        break;
 
-    starting_location = move_windows(base_window,
-                                     target_window,
-                                     starting_location,
-                                     new_entry)
-    if detect_change(base_window, target_window):
-      if start_change == -1:
-        start_change = starting_location + WINDOW_LEN - 1
-      if starting_location >= start_change:
-        print (start_change, starting_location)
-        break
-    else:
-      if start_change != -1:
-        start_change = -1
-  
-  # print (base_window, "\n", target_window)
+      starting_location = move_windows(base_window,
+                                       target_window,
+                                       starting_location,
+                                       new_entry)
+      if detect_change(base_window, target_window):
+        if start_change == -1:
+          start_change = starting_location + WINDOW_LEN - 1
+        if starting_location >= start_change:
+          print (start_change, starting_location)
+          break
+      else:
+        if start_change != -1:
+          start_change = -1
+  else:
+    print ("Categorical data should go here")
 
 def main(argv):
   len_argv = len(argv)
