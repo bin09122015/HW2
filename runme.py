@@ -1,9 +1,15 @@
+from __future__ import division
+from scipy.stats import chisquare, chi2_contingency
+
 import sys
 import os
 
 import numpy as np
 import scipy as sp
 from scipy import stats
+
+
+
 
 BASE_COUNT = 50
 WINDOW_LEN = 50
@@ -133,7 +139,62 @@ def run(dirname, file):
     if start_var_change != -1 and (start_var_change-starting_location) < WINDOW_LEN/2:
         print ("var_e", start_var_change, starting_location)
   else:
-    print ("Categorical data should go here")
+  
+    # Categorical data should go here
+    
+    dirAndFile = dirname + '/' + file
+    result = detectChange_Categoral(dirAndFile, threshold=0.0005, WINDOW_LEN = 40, MOVING_INTERVAL = 5)
+    
+    print(file, result)
+
+
+def detectChange_Categoral(file, threshold, WINDOW_LEN, MOVING_INTERVAL):
+    fin = open(file, 'r')
+    data = fin.read()
+    fin.close()
+
+    data = list(map(lambda s: s.strip(), data))  # remove '/n'
+    data = list(filter(None, data))  # remove empty string
+    # data is a list now
+
+    baseline = data[0:BASE_COUNT]
+
+    variables = list(set(baseline))
+
+    freq_old = np.zeros(len(variables))
+    freq = np.zeros(len(variables))
+
+
+    for i in range(len(variables)):
+        freq_old[i] = baseline[0:WINDOW_LEN].count(variables[i])
+
+    k = 0
+    while (k + 2 * WINDOW_LEN < len(data)):
+        for i in range(len(variables)):
+            sample = data[k:k+WINDOW_LEN]
+            freq_old[i] = sample.count(variables[i])
+
+            sample = data[k+WINDOW_LEN : k+2*WINDOW_LEN]
+            freq[i] = sample.count(variables[i])
+
+        if (sum(freq==0)>0 or sum(freq_old==0)>0):
+            chi = chisquare(freq, freq_old)
+        else:
+            chi = chi2_contingency([freq,freq_old], correction=True)
+            
+        if (len(variables)==2):
+            chi = chisquare(freq, freq_old)
+        
+
+        if(k + WINDOW_LEN>50 and chi[1]<threshold):
+            return k+WINDOW_LEN
+
+        k = k + MOVING_INTERVAL
+        freq_old = freq.copy()
+        
+    
+    return -1
+
 
 def main(argv):
   len_argv = len(argv)
