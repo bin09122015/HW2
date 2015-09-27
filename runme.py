@@ -25,6 +25,11 @@ def detect_change(base, target):
   target_mean = sum(target)/len(target)
 
   # print ("(" + str(left) + "," + str(right) + ")", str(target_mean))
+  (mean_cntr, var_cntr, std_cntr) = sp.stats.bayes_mvs(base, alpha=0.95)
+  target_variance = (np.std(target, ddof=1))**2
+  print ("(" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
+
+  return target_variance < var_cntr[1][0] or target_variance > var_cntr[1][1]
 
   return target_mean < left or target_mean > right
 
@@ -46,7 +51,7 @@ def move_windows(base, target, starting, new_entry):
     # print (base)
 
   slide_window(target, new_entry)
-  # print (target)
+  print (target)
 
   starting += 1
 
@@ -85,9 +90,13 @@ def run(dirname, file):
         if starting_location >= start_change:
           print (start_change, starting_location)
           break
+        print (start_change, starting_location)
       else:
         if start_change != -1:
           start_change = -1
+    
+    if start_change != -1 and (starting_location-start_change) < WINDOW_LEN/2:
+        print (start_change, starting_location)
   else:
     print ("Categorical data should go here")
 
