@@ -100,6 +100,8 @@ def run(dirname, file):
     start_mean_change = -1
     start_var_change = -1
 
+    result = -1
+
     while True:
       new_entry = get_next_entry(f)
       if new_entry == "":
@@ -113,6 +115,7 @@ def run(dirname, file):
         if start_mean_change == -1:
           start_mean_change = starting_location + WINDOW_LEN - 1
         if starting_location >= start_mean_change:
+          result = start_mean_change
           print ("mean_b", start_mean_change, starting_location)
           start_mean_change = -1
           break
@@ -125,6 +128,7 @@ def run(dirname, file):
         if start_var_change == -1:
           start_var_change = starting_location + WINDOW_LEN - 1
         if start_mean_change == -1 and starting_location >= start_var_change:
+          result = start_var_change
           print ("var_b", start_var_change, starting_location)
           start_var_change = -1
           break
@@ -134,12 +138,19 @@ def run(dirname, file):
           start_var_change = -1
     
     if start_mean_change != -1 and (start_mean_change-starting_location) < WINDOW_LEN/2:
+        result = start_mean_change
         print ("mean_e", start_mean_change, starting_location)
 
     if start_var_change != -1 and (start_var_change-starting_location) < WINDOW_LEN/2:
+        result = start_var_change
         print ("var_e", start_var_change, starting_location)
+
+    f.close()
+
+    return (file, result)
   else:
-  
+    f.close()  
+
     # Categorical data should go here
     
     dirAndFile = dirname + '/' + file
@@ -203,15 +214,23 @@ def main(argv):
     sys.exit()
 
   dirname = argv[0]
+  output = []
 
   if len_argv == 1:
     for file in os.listdir("./" + dirname):
       if file.endswith(".txt"):
-        run(dirname, file)
+        result = run(dirname, file)
+        output.append(result)
   else:
     assert len_argv == 2
     filename = argv[1]
-    run(dirname, filename)
+    result = run(dirname, filename)
+    output.append(result)
+
+  f = open("outputbin.txt", "w")
+  for (filename, position) in output:
+    f.write(filename + "\t" + str(position) + "\n")
+  f.close()
 
 if __name__ == "__main__":
   main(sys.argv[1:])
