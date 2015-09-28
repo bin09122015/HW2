@@ -50,7 +50,7 @@ def detect_var_change(base, target):
   target_minus_outliers = reject_outliers(target)
   target_variance = (np.std(target_minus_outliers, ddof=1))**2
 
-  print ("variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
+  # print ("variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
 
   return (target_variance < var_cntr[1][0], target_variance > var_cntr[1][1])
 
@@ -72,7 +72,7 @@ def move_windows(base, target, starting, new_entry):
     # print (base)
 
   slide_window(target, new_entry)
-  print (target)
+  # print (target)
 
   starting += 1
 
@@ -80,12 +80,6 @@ def move_windows(base, target, starting, new_entry):
 
 def backtrace(target, base, start_var_change, starting_location):
   result = start_var_change
-
-  """
-  history = target[::-1] + base[::-1]
-  target = history[:WINDOW_LEN]
-  base = history[-(len(history)-WINDOW_LEN):]
-  """
 
   target = target[::-1]
   base = base[::-1]
@@ -99,7 +93,7 @@ def backtrace(target, base, start_var_change, starting_location):
 
     target_variance = (np.std(target, ddof=1))**2
 
-    print ("back variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
+    # print ("back variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
 
     if (target_variance > var_cntr[1][1]):
       result = starting_location + 1
@@ -164,7 +158,7 @@ def run(dirname, file):
           print ("var_b", start_var_change, starting_location)
           start_var_change = -1
           break
-        print ("var", start_var_change, starting_location)
+        # print ("var", start_var_change, starting_location)
       else:
         if start_var_change != -1:
           start_var_change = -1
