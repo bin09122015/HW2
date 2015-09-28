@@ -1,5 +1,5 @@
 from __future__ import division
-from scipy.stats import chisquare, chi2_contingency
+from scipy.stats import chisquare, chi2_contingency, binom_test
 
 import sys
 import os
@@ -234,11 +234,7 @@ def detectChange_Categoral(threshold, WINDOW_LEN, MOVING_INTERVAL, data):
                     break
             
             end = k_track + 2*WINDOW_LEN
-            if (end - WINDOW_LEN/2 > start):
-                position = int(end - WINDOW_LEN/2)
-            else:
-                position = int((start + end)/2)
-            
+            position = int((start + end)/2)
             return position
 
         k = k + MOVING_INTERVAL        
@@ -258,15 +254,16 @@ def calculateP(variables, k, data, WINDOW_LEN):
         sample = data[k+WINDOW_LEN : k+2*WINDOW_LEN]
         freq[i] = sample.count(variables[i])
 
-    if (sum(freq==0)>0 or sum(freq_old==0)>0):
-        chi = chisquare(freq, freq_old)
-    else:
-        chi = chi2_contingency([freq,freq_old], correction=True)
-
     if (len(variables)==2):
         chi = chisquare(freq, freq_old)
-    
-    p = chi[1]
+        p = chi[1]
+        #p = binom_test(freq, n=None, p=freq_old[0]/sum(freq_old))
+    else:    
+        if (sum(freq==0)>0 or sum(freq_old==0)>0):
+            chi = chisquare(freq, freq_old)
+        else:
+            chi = chi2_contingency([freq,freq_old], correction=True)
+        p = chi[1]
         
     return p
 
@@ -292,6 +289,7 @@ def main(argv):
     output.append(result)
 
   f = open("outputbin.txt", "w")
+  f.write("Bin Gao" + "\t" + "Bin Yan" + "\n")
   for (filename, position) in output:
     f.write(filename + "\t" + str(position) + "\n")
   f.close()
