@@ -2,8 +2,12 @@ bin_negBinary.txt	-1
 bin_negTriple.txt	-1
 bin_negTriple2.txt	-1
 bin_posBinary_173.txt	197
+bin_posMeanDown_ab_110.txt	110
+bin_posMeanUp_ab_110.txt	110
 bin_posShiftUpVar_49_reverse.txt	49
+bin_posShiftUpVar_60_long.txt	57
 bin_posShiftUpVar_63_reverse.txt	64
+bin_posShiftUpVar_70_long.txt	71
 bin_posTriple2_140.txt	148
 bin_posTriple_200.txt	196
 negBinary.txt	-1
