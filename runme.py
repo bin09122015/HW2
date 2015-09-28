@@ -110,6 +110,7 @@ def run(dirname, file):
     dirAndFile = dirname + '/' + file
     result = detectChange_Categoral(dirAndFile, threshold=0.0005, WINDOW_LEN = 40, MOVING_INTERVAL = 5)
     
+    
     print(file, result)
 
 
