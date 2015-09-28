@@ -102,8 +102,11 @@ def backtrace(target, base, start_var_change, starting_location):
   return result
 
 def run(dirname, file):
+  f = open(dirname + '/' + file)
+  first_entry = get_next_entry(f)
+  f.close()
   
-  if isinstance(tmp_entries[0], float):
+  if isinstance(first_entry, float):
     
     assert BASE_COUNT >= WINDOW_LEN
   
