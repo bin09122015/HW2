@@ -8,9 +8,6 @@ import numpy as np
 import scipy as sp
 from scipy import stats
 
-import warnings
-warnings.filterwarnings("ignore")
-
 BASE_COUNT = 50
 WINDOW_LEN = 50
 
@@ -191,84 +188,59 @@ def run(dirname, file):
     # Categorical data should go here
     
     dirAndFile = dirname + '/' + file
+    result = detectChange_Categoral(dirAndFile, threshold=0.0005, WINDOW_LEN = 40, MOVING_INTERVAL = 5)
     
-    data = readData(dirAndFile)
-
-    result = detectChange_Categoral(threshold=0.0005, WINDOW_LEN = 40, MOVING_INTERVAL = 5, data=data)
     
     print(file, result)
 
     return (file, result)
 
-
-def readData(file):
+def detectChange_Categoral(file, threshold, WINDOW_LEN, MOVING_INTERVAL):
     fin = open(file, 'r')
     data = fin.read()
     fin.close()
 
     data = list(map(lambda s: s.strip(), data))  # remove '/n'
     data = list(filter(None, data))  # remove empty string
-    
-    return data
+    # data is a list now
 
-def detectChange_Categoral(threshold, WINDOW_LEN, MOVING_INTERVAL, data):
     baseline = data[0:BASE_COUNT]
 
     variables = list(set(baseline))
-    
+
     freq_old = np.zeros(len(variables))
     freq = np.zeros(len(variables))
+
+
+    for i in range(len(variables)):
+        freq_old[i] = baseline[0:WINDOW_LEN].count(variables[i])
 
     k = 0
     while (k + 2 * WINDOW_LEN < len(data)):
-        
-        p = calculateP(variables, k, data, WINDOW_LEN)
+        for i in range(len(variables)):
+            sample = data[k:k+WINDOW_LEN]
+            freq_old[i] = sample.count(variables[i])
 
-        
-        if(k + WINDOW_LEN > 50 and p < threshold):
-            start = k + WINDOW_LEN            
-            for i in range(WINDOW_LEN):
-                k_track = start - WINDOW_LEN - i
-                p_track = calculateP(variables, k_track, data, WINDOW_LEN)
-                if(p_track > 0.05):
-                    break
-            
-            end = k_track + 2*WINDOW_LEN
-            if (end - WINDOW_LEN/2 > start):
-                position = int(end - WINDOW_LEN/2)
-            else:
-                position = int((start + end)/2)
-            
-            return position
+            sample = data[k+WINDOW_LEN : k+2*WINDOW_LEN]
+            freq[i] = sample.count(variables[i])
 
-        k = k + MOVING_INTERVAL        
+        if (sum(freq==0)>0 or sum(freq_old==0)>0):
+            chi = chisquare(freq, freq_old)
+        else:
+            chi = chi2_contingency([freq,freq_old], correction=True)
+            
+        if (len(variables)==2):
+            chi = chisquare(freq, freq_old)
+        
+
+        if(k + WINDOW_LEN>50 and chi[1]<threshold):
+            return k+WINDOW_LEN
+
+        k = k + MOVING_INTERVAL
+        freq_old = freq.copy()
+        
     
     return -1
-    
-    
-def calculateP(variables, k, data, WINDOW_LEN):
-    
-    freq_old = np.zeros(len(variables))
-    freq = np.zeros(len(variables))
-
-    for i in range(len(variables)):
-        sample = data[k:k+WINDOW_LEN]
-        freq_old[i] = sample.count(variables[i])
-
-        sample = data[k+WINDOW_LEN : k+2*WINDOW_LEN]
-        freq[i] = sample.count(variables[i])
-
-    if (sum(freq==0)>0 or sum(freq_old==0)>0):
-        chi = chisquare(freq, freq_old)
-    else:
-        chi = chi2_contingency([freq,freq_old], correction=True)
-
-    if (len(variables)==2):
-        chi = chisquare(freq, freq_old)
-    
-    p = chi[1]
-        
-    return p
 
 
 def main(argv):
