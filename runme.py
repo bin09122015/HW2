@@ -187,6 +187,7 @@ def run(dirname, file):
     
     print(file, result)
 
+    return (file, result)
 
 def detectChange_Categoral(file, threshold, WINDOW_LEN, MOVING_INTERVAL):
     fin = open(file, 'r')
