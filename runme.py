@@ -8,9 +8,6 @@ import numpy as np
 import scipy as sp
 from scipy import stats
 
-
-
-
 BASE_COUNT = 50
 WINDOW_LEN = 50
 
@@ -55,7 +52,7 @@ def detect_var_change(base, target):
 
   print ("variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
 
-  return target_variance < var_cntr[1][0] or target_variance > var_cntr[1][1]
+  return (target_variance < var_cntr[1][0], target_variance > var_cntr[1][1])
 
 def get_next_entry(f):
   entry = f.readline().strip()
@@ -75,11 +72,40 @@ def move_windows(base, target, starting, new_entry):
     # print (base)
 
   slide_window(target, new_entry)
-  # print (target)
+  print (target)
 
   starting += 1
 
   return starting
+
+def backtrace(target, base, start_var_change, starting_location):
+  result = start_var_change
+
+  """
+  history = target[::-1] + base[::-1]
+  target = history[:WINDOW_LEN]
+  base = history[-(len(history)-WINDOW_LEN):]
+  """
+
+  target = target[::-1]
+  base = base[::-1]
+
+  (_, var_cntr, _) = sp.stats.bayes_mvs(target, alpha=0.95)
+  while len(base)>0:
+    target.pop(0)
+    target.append(base[0])
+    base.pop(0)
+    starting_location -= 1
+
+    target_variance = (np.std(target, ddof=1))**2
+
+    print ("back variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
+
+    if (target_variance > var_cntr[1][1]):
+      result = starting_location + 1
+      break
+
+  return result
 
 def run(dirname, file):
   assert BASE_COUNT >= WINDOW_LEN
@@ -101,6 +127,8 @@ def run(dirname, file):
     start_var_change = -1
 
     result = -1
+    lt = False
+    gt = False
 
     while True:
       new_entry = get_next_entry(f)
@@ -124,10 +152,14 @@ def run(dirname, file):
         if start_mean_change != -1:
           start_mean_change = -1
 
-      if detect_var_change(base_window, target_window):
+      (lt, gt) = detect_var_change(base_window, target_window)
+
+      if lt or gt:
         if start_var_change == -1:
           start_var_change = starting_location + WINDOW_LEN - 1
         if start_mean_change == -1 and starting_location >= start_var_change:
+          if lt:
+            start_var_change = backtrace(target_window, base_window, start_var_change, starting_location)
           result = start_var_change
           print ("var_b", start_var_change, starting_location)
           start_var_change = -1
@@ -141,7 +173,10 @@ def run(dirname, file):
         result = start_mean_change
         print ("mean_e", start_mean_change, starting_location)
 
-    if start_var_change != -1 and (start_var_change-starting_location) < WINDOW_LEN/2:
+    if result == -1 and start_var_change != -1 and (start_var_change-starting_location) < WINDOW_LEN/2:
+        if lt:
+          start_var_change = backtrace(target_window, base_window, start_var_change, starting_location)
+
         result = start_var_change
         print ("var_e", start_var_change, starting_location)
 
