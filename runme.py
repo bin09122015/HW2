@@ -102,18 +102,20 @@ def backtrace(target, base, start_var_change, starting_location):
   return result
 
 def run(dirname, file):
-  assert BASE_COUNT >= WINDOW_LEN
-
-  print (file)
-
-  f = open(dirname + '/' + file)
-  tmp_entries = []
-
-  for i in range(BASE_COUNT):
-    entry = get_next_entry(f)
-    tmp_entries.append(entry)
-
+  
   if isinstance(tmp_entries[0], float):
+    
+    assert BASE_COUNT >= WINDOW_LEN
+  
+    print (file)
+  
+    f = open(dirname + '/' + file)
+    tmp_entries = []
+  
+    for i in range(BASE_COUNT):
+        entry = get_next_entry(f)
+        tmp_entries.append(entry)
+  
     base_window = tmp_entries[-WINDOW_LEN:]
     target_window = tmp_entries[-WINDOW_LEN:]
     starting_location = 0
@@ -177,9 +179,9 @@ def run(dirname, file):
     f.close()
 
     return (file, result)
+  
   else:
-    f.close()  
-
+  
     # Categorical data should go here
     
     dirAndFile = dirname + '/' + file
