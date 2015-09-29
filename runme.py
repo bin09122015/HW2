@@ -94,6 +94,9 @@ def backtrace(target, base, start_var_change, starting_location):
     base.pop(0)
     starting_location -= 1
 
+    if starting_location < BASE_COUNT:
+      return result
+
     target_variance = (np.std(target, ddof=1))**2
 
     # print ("back variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
@@ -184,7 +187,7 @@ def run(dirname, file):
 
     f.close()
 
-    return (file, result)
+    return (file, str(result))
   
   else:
   
@@ -198,8 +201,7 @@ def run(dirname, file):
     
     print(file, result)
 
-    return (file, result)
-
+    return (file, str(result))
 
 def readData(file):
     fin = open(file, 'r')
@@ -291,7 +293,7 @@ def main(argv):
   f = open("outputbin.txt", "w")
   f.write("Bin Gao" + "\t" + "Bin Yan" + "\n")
   for (filename, position) in output:
-    f.write(filename + "\t" + str(position) + "\n")
+    f.write(filename + "\t" + position + "\n")
   f.close()
 
 if __name__ == "__main__":
