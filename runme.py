@@ -58,7 +58,11 @@ def detect_var_change(base, target):
   return (target_variance < var_cntr[1][0], target_variance > var_cntr[1][1])
 
 def get_next_entry(f):
-  entry = f.readline().strip()
+  entry = f.readline()
+  if entry == "":
+    return None
+
+  entry = entry.strip()
   try:
     number = float(entry)
     return number
@@ -123,6 +127,12 @@ def run(dirname, file):
   
     for i in range(BASE_COUNT):
         entry = get_next_entry(f)
+
+        if entry is None:
+          return (file, "not sufficient baseline.")
+        if not isinstance(entry, float):
+          return (file, "encounter non-numeric data in a numberic test file.")
+
         tmp_entries.append(entry)
   
     base_window = tmp_entries[-WINDOW_LEN:]
@@ -137,8 +147,10 @@ def run(dirname, file):
 
     while True:
       new_entry = get_next_entry(f)
-      if new_entry == "":
+      if new_entry == None or new_entry == "":
         break;
+      if not isinstance(new_entry, float):
+        return (file, "encounter non-numeric data in a numberic test file.")
 
       starting_location = move_windows(base_window,
                                        target_window,
