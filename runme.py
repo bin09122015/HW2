@@ -271,7 +271,9 @@ def calculateP(variables, k, data, WINDOW_LEN):
     if (len(variables)==2):
         chi = chisquare(freq, freq_old)
         p = chi[1]
-        #p = binom_test(freq, n=None, p=freq_old[0]/sum(freq_old))
+        # Tried the exact binomial goodness of fit method:
+        # p = binom_test(freq, n=None, p=freq_old[0]/sum(freq_old))
+        # The results were the same as Chi-square
     else:    
         if (sum(freq==0)>0 or sum(freq_old==0)>0):
             chi = chisquare(freq, freq_old)
