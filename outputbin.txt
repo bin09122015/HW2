@@ -1,6 +1,8 @@
 Bin Gao	Bin Yan
+bin_err_NA_1.txt	encounter non-numeric data in a numberic test file.
+bin_err_NA_2.txt	encounter non-numeric data in a numberic test file.
+bin_err_None.txt	not sufficient baseline.
 bin_negBinary.txt	-1
-bin_negBinary2.txt	100
 bin_negBinary3.txt	-1
 bin_negBinary4.txt	-1
 bin_negTriple.txt	-1
@@ -10,7 +12,7 @@ bin_posBinary_210.txt	219
 bin_posBinary_220.txt	372
 bin_posMeanDown_ab_110.txt	110
 bin_posMeanUp_ab_110.txt	110
-bin_posShiftUpVar_49_reverse.txt	49
+bin_posShiftUpVar_51_reverse.txt	51
 bin_posShiftUpVar_60_long.txt	57
 bin_posShiftUpVar_63_reverse.txt	64
 bin_posShiftUpVar_70_long.txt	71
