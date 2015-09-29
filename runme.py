@@ -13,13 +13,12 @@ warnings.filterwarnings("ignore")
 
 BASE_COUNT = 50
 WINDOW_LEN = 50
+DEBUG = False
 
 def get_confidence_interval(data, confidence=0.95):
   a = np.array(data)
   n = len(a)
   m = np.mean(a)
-  # sigma = np.std(a, ddof=1)
-  # conf_int = stats.norm.interval(confidence, loc=m, scale=sigma)
 
   sigma = sp.stats.sem(a)
   h = sigma * sp.stats.t._ppf((1+confidence)/2, n-1)
@@ -30,30 +29,17 @@ def detect_mean_change(base, target):
   (left, right) = get_confidence_interval(base)
   target_mean = sum(target)/len(target)
 
-  # print ("mean: (" + str(left) + "," + str(right) + ")", str(target_mean))
+  if DEBUG:
+    print ("mean: (" + str(left) + "," + str(right) + ")", str(target_mean))
 
   return target_mean < left or target_mean > right
 
-def reject_outliers(data):
-  return data
-
-  tmp = data[:]
-  tmp_max = max(tmp)
-  tmp_min = min(tmp)
-  tmp.remove(tmp_max)
-  tmp.remove(tmp_min)
-
-  assert len(tmp) == len(data)-2
-
-  return tmp
-
 def detect_var_change(base, target):
-  base_minus_outliers = reject_outliers(base)
-  (mean_cntr, var_cntr, std_cntr) = sp.stats.bayes_mvs(base_minus_outliers, alpha=0.95)
-  target_minus_outliers = reject_outliers(target)
-  target_variance = (np.std(target_minus_outliers, ddof=1))**2
+  (mean_cntr, var_cntr, std_cntr) = sp.stats.bayes_mvs(base, alpha=0.95)
+  target_variance = (np.std(target, ddof=1))**2
 
-  # print ("variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
+  if DEBUG:
+    print ("variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
 
   return (target_variance < var_cntr[1][0], target_variance > var_cntr[1][1])
 
@@ -76,10 +62,12 @@ def slide_window(window, new_element):
 def move_windows(base, target, starting, new_entry):
   if starting >= BASE_COUNT:
     slide_window(base, target[0])
-    # print (base)
+    if DEBUG:
+      print (base)
 
   slide_window(target, new_entry)
-  # print (target)
+  if DEBUG:
+    print (target)
 
   starting += 1
 
@@ -103,7 +91,8 @@ def backtrace(target, base, start_var_change, starting_location):
 
     target_variance = (np.std(target, ddof=1))**2
 
-    # print ("back variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
+    if DEBUG:
+      print ("back variance: (" + str(var_cntr[1][0]) + "," + str(var_cntr[1][1]) + ")", str(target_variance))
 
     if (target_variance > var_cntr[1][1]):
       result = starting_location + 1
@@ -116,11 +105,11 @@ def run(dirname, file):
   first_entry = get_next_entry(f)
   f.close()
   
+  print ("Processing " + file)
+
   if isinstance(first_entry, float):
     
     assert BASE_COUNT >= WINDOW_LEN
-  
-    print (file)
   
     f = open(dirname + '/' + file)
     tmp_entries = []
@@ -161,10 +150,13 @@ def run(dirname, file):
           start_mean_change = starting_location + WINDOW_LEN - 1
         if starting_location >= start_mean_change:
           result = start_mean_change
-          print ("mean_b", start_mean_change, starting_location)
+          if DEBUG:
+            print ("mean_b", start_mean_change, starting_location)
           start_mean_change = -1
           break
-        # print ("mean", start_mean_change, starting_location)
+  
+        if DEBUG:
+          print ("mean", start_mean_change, starting_location)
       else:
         if start_mean_change != -1:
           start_mean_change = -1
@@ -178,24 +170,29 @@ def run(dirname, file):
           if lt:
             start_var_change = backtrace(target_window, base_window, start_var_change, starting_location)
           result = start_var_change
-          print ("var_b", start_var_change, starting_location)
+          if DEBUG:
+            print ("var_b", start_var_change, starting_location)
           start_var_change = -1
           break
-        # print ("var", start_var_change, starting_location)
+
+        if DEBUG:
+          print ("var", start_var_change, starting_location)
       else:
         if start_var_change != -1:
           start_var_change = -1
     
     if start_mean_change != -1 and (start_mean_change-starting_location) < WINDOW_LEN/2:
         result = start_mean_change
-        print ("mean_e", start_mean_change, starting_location)
+        if DEBUG:
+          print ("mean_e", start_mean_change, starting_location)
 
     if result == -1 and start_var_change != -1 and (start_var_change-starting_location) < WINDOW_LEN/2:
         if lt:
           start_var_change = backtrace(target_window, base_window, start_var_change, starting_location)
 
         result = start_var_change
-        print ("var_e", start_var_change, starting_location)
+        if DEBUG:
+          print ("var_e", start_var_change, starting_location)
 
     f.close()
 
@@ -211,7 +208,8 @@ def run(dirname, file):
 
     result = detectChange_Categoral(threshold=0.0005, WINDOW_LEN = 40, MOVING_INTERVAL = 5, data=data)
     
-    print(file, result)
+    if DEBUG:
+      print(file, result)
 
     return (file, str(result))
 
